@@ -1,5 +1,5 @@
 pyamtrack
 pandas
 numpy
-matplotlib
+seaborn
 jupyter

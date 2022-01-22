@@ -1,71 +1,10 @@
-from dataclasses import dataclass, field
-from functools import lru_cache
 import itertools
 
 import numpy as np
 import pandas as pd
 import pyamtrack.libAT as libam
 
-
-@dataclass
-class SimulationSetup:
-    '''
-    TODO add list of available materials
-    '''
-    particle_name: str = "1H"
-    dose_gy: float = 0.3
-    material_name: str = "Aluminum Oxide"
-    er_model_name: str = "ER_Edmund"
-    rdd_model_name: str = "RDD_Geiss"
-    gamma_response_model_name: str = "GR_GeneralTarget"
-    stopping_power_source_name: str = "PSTAR"
-    slab_thickness_um: float = 100.
-    saturation_cross_section_factor: float = 1.4
-    r: float = 44.
-    smax: float = 27.6
-    d01: float = 2.9
-    c1: float = 1.
-    m1: float = 1.
-    d02: float = 4.66
-    c2: float = 2.
-    m2: float = 1.
-
-    def __hash__(self):
-        '''
-        Calculate hash function from values of all attributes which are not properties
-        This is needed for @lru_cache function to speedup calculations
-        '''
-        return hash((getattr(self, attr_name) for attr_name in vars(self).keys()))
-
-    @property
-    @lru_cache
-    def particle_code(self) -> int:
-        return libam.AT_particle_no_from_particle_name_single(self.particle_name)
-
-    @property
-    @lru_cache
-    def material_code(self) -> int:
-        return libam.AT_material_number_from_name(self.material_name)
-
-    @property
-    @lru_cache
-    def rdd_model_code(self) -> int:
-        return libam.RDDModels[self.rdd_model_name].value
-
-    @property
-    @lru_cache
-    def er_model_code(self) -> int:
-        return libam.AT_ERModels[self.er_model_name].value
-
-    @property
-    @lru_cache
-    def gamma_response_model_code(self) -> int:
-        return libam.AT_GammaResponseModels[self.gamma_response_model_name].value
-
-    @property
-    @lru_cache
-    def stopping_power_source_code(self) -> int:
-        return libam.stoppingPowerSource_no[self.stopping_power_source_name].value
+from settings import SimulationSetup
 
 
 def fluence_cm2(E_MeV_u: float, sim_setup: SimulationSetup) -> float:
@@ -125,23 +64,31 @@ def run_igk(E_MeV_u: float, a0_m: float, sim_setup: SimulationSetup):
 
 def get_hpc(E_MeV_u: float, a0_m: float, sim_setup: SimulationSetup) -> float:
     current_E_MeV_u = E_MeV_u
-    hcp : float = 0.
+    hcp: float = 0.
     for _ in range(10):
         current_E_MeV_u -= eloss_MeV(current_E_MeV_u, sim_setup)
         if current_E_MeV_u <= 0:
             break
-        _, S_HCP, _, _, _, _, _ = run_igk(current_E_MeV_u, a0_m, sim_setup)    
+        _, S_HCP, _, _, _, _, _ = run_igk(current_E_MeV_u, a0_m, sim_setup)
         hcp += S_HCP[0] / 10.
     return hcp
 
+
 def let_keV_um(E_MeV_u: float, sim_setup: SimulationSetup) -> float:
-    pass
+    stopping_power_keV_um = []
+    libam.AT_Stopping_Power(p_stopping_power_source=sim_setup.stopping_power_source_name,
+                            p_E_MeV_u=[E_MeV_u],
+                            p_particle_no=[sim_setup.particle_code],
+                            p_material_no=sim_setup.material_code,
+                            p_stopping_power_keV_um=stopping_power_keV_um)
+    return stopping_power_keV_um[0]
+
 
 def create_df(sim_setup: SimulationSetup) -> pd.DataFrame:
 
     # iterating through dictionary is equivalent to R expand.grid
     data_dict = {
-        'E_MeV_u': np.linspace(start=1.5, stop=60., num=400),
+        'E_MeV_u': np.linspace(start=sim_setup.start_E_MeV_u, stop=sim_setup.stop_E_MeV_u, num=sim_setup.num_E_MeV_u),
         'a0_m': 1e-9 * np.array([95., 50., 150.]),  # nm to m,
     }
     df: pd.DataFrame = pd.DataFrame.from_records(data=itertools.product(*data_dict.values()), columns=data_dict.keys())
