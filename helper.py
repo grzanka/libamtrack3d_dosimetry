@@ -42,10 +42,9 @@ def eloss_MeV(E_MeV_u: float, sim_setup: SimulationSetup) -> float:
 
 def run_igk(E_MeV_u: float, a0_nm: float, sim_setup: SimulationSetup):
 
-
     relative_efficiency, S_HCP, S_gamma, sI_cm2, gamma_dose_Gy, P_I, P_g = [0], [0], [0], [0], [0], [0], [0]
 
-    a0_m = 1e-9 * a0_nm # nm -> m
+    a0_m = 1e-9 * a0_nm  # nm -> m
 
     libam.AT_run_IGK_method(p_E_MeV_u=[E_MeV_u],
                             p_particle_no=[sim_setup.beam.particle_code],

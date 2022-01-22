@@ -44,6 +44,7 @@ class DetectorPropertySetup:
     def __hash__(self):
         return pure_attr_hash(self)
 
+
 @dataclass
 class TrackStructureModel:
     er_model_name: str = "ER_Edmund"
