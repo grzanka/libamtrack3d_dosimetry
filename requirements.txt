@@ -1,5 +1,6 @@
 pyamtrack
 pandas
 numpy
-seaborn
+tqdm
 jupyter
+seaborn
