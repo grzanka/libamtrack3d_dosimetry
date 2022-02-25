@@ -8,9 +8,9 @@ def demo():
 
     # adjust simulation setup
     simulation_setup = SimulationSetup()
-    simulation_setup.start_E_MeV_u = 30.
-    simulation_setup.stop_E_MeV_u = 60.
-    simulation_setup.num_E_MeV_u = 4
+    simulation_setup.beam.start_E_MeV_u = 30.
+    simulation_setup.beam.stop_E_MeV_u = 60.
+    simulation_setup.beam.num_E_MeV_u = 4
     pretty_print(simulation_setup)
 
     test_E_MeV_u = 60.

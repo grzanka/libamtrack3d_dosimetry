@@ -84,7 +84,7 @@ def create_df(sim_setup: SimulationSetup) -> pd.DataFrame:
 
     # iterating through dictionary is equivalent to R expand.grid
     data_dict = {
-        'E_MeV_u': np.linspace(start=sim_setup.start_E_MeV_u, stop=sim_setup.stop_E_MeV_u, num=sim_setup.num_E_MeV_u),
+        'E_MeV_u': np.linspace(start=sim_setup.beam.start_E_MeV_u, stop=sim_setup.beam.stop_E_MeV_u, num=sim_setup.beam.num_E_MeV_u),
         'a0_nm': sim_setup.tst_model.a0_nm
     }
     df: pd.DataFrame = pd.DataFrame.from_records(data=itertools.product(*data_dict.values()), columns=data_dict.keys())
