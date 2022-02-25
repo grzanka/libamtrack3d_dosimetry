@@ -49,7 +49,7 @@ class DetectorPropertySetup:
 class TrackStructureModel:
     er_model_name: str = "ER_Edmund"
     rdd_model_name: str = "RDD_Geiss"
-    a0_nm: Tuple[float] = (95., 50., 150.)
+    a0_nm: Tuple[float, ...] = (95., 50., 150.)
 
     @property
     @lru_cache
