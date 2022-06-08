@@ -1,6 +1,7 @@
 import itertools
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import pyamtrack.libAT as libam
 
@@ -68,6 +69,30 @@ def run_igk(E_MeV_u: float, a0_nm: float, sim_setup: SimulationSetup):
     return relative_efficiency, S_HCP, S_gamma, sI_cm2, gamma_dose_Gy, P_I, P_g
 
 
+def rdd_dose_Gy(x_m: npt.NDArray, sim_setup: SimulationSetup) -> npt.NDArray:
+    result_dose_Gy = np.full_like(x_m, np.nan)
+    if sim_setup.beam.start_E_MeV_u != sim_setup.beam.stop_E_MeV_u:
+        print("Only single energy value should be provided in sim_setup.beam (start_E_MeV_u == stop_E_MeV_u)")
+        return result_dose_Gy
+    if sim_setup.beam.num_E_MeV_u != 1:
+        print("Only single energy value should be provided in sim_setup.beam (num_E_MeV_u == 1)")
+        return result_dose_Gy
+    if len(sim_setup.tst_model.a0_nm) != 1:
+        print("Only single a0 value should be provided in sim_setup.tst_model")
+        return result_dose_Gy
+    a0_m = sim_setup.tst_model.a0_nm[0] * 1e-9
+    libam.AT_D_RDD_Gy(p_r_m=x_m.tolist(),
+                    p_E_MeV_u=sim_setup.beam.start_E_MeV_u,
+                    p_particle_no=sim_setup.beam.particle_code,
+                    p_material_no=sim_setup.material.code,
+                    p_rdd_model=sim_setup.tst_model.rdd_model_code,
+                    p_rdd_parameter=[a0_m, 0, 0],
+                    p_er_model=sim_setup.tst_model.er_model_code,
+                    p_stopping_power_source_no=sim_setup.stopping_power_source_code,
+                    p_D_RDD_Gy=result_dose_Gy)
+    return result_dose_Gy
+
+
 def get_hpc(E_MeV_u: float, a0_nm: float, sim_setup: SimulationSetup) -> float:
     current_E_MeV_u = E_MeV_u
     hcp: float = 0.
@@ -84,8 +109,12 @@ def create_df(sim_setup: SimulationSetup) -> pd.DataFrame:
 
     # iterating through dictionary is equivalent to R expand.grid
     data_dict = {
-        'E_MeV_u': np.linspace(start=sim_setup.beam.start_E_MeV_u, stop=sim_setup.beam.stop_E_MeV_u, num=sim_setup.beam.num_E_MeV_u),
-        'a0_nm': sim_setup.tst_model.a0_nm
+        'E_MeV_u':
+        np.linspace(start=sim_setup.beam.start_E_MeV_u,
+                    stop=sim_setup.beam.stop_E_MeV_u,
+                    num=sim_setup.beam.num_E_MeV_u),
+        'a0_nm':
+        sim_setup.tst_model.a0_nm
     }
     df: pd.DataFrame = pd.DataFrame.from_records(data=itertools.product(*data_dict.values()), columns=data_dict.keys())
 
