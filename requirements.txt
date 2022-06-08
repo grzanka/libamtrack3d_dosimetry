@@ -1,4 +1,4 @@
-pyamtrack
+pyamtrack ; sys_platform == "linux"
 pandas
 numpy
 tqdm
