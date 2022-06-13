@@ -52,17 +52,12 @@ class TrackStructureModel:
     a0_nm: Tuple[float, ...] = (95., 50., 150.)
 
     @property
-    @lru_cache
     def er_model_code(self) -> int:
         return libam.AT_ERModels[self.er_model_name].value
 
     @property
-    @lru_cache
     def rdd_model_code(self) -> int:
         return libam.RDDModels[self.rdd_model_name].value
-
-    def __hash__(self):
-        return pure_attr_hash(self)
 
 
 @dataclass
@@ -78,20 +73,15 @@ class GammaResponseModel:
     m2: float = 1.
 
     @property
-    @lru_cache
     def code(self) -> int:
         return libam.AT_GammaResponseModels[self.name].value
 
     @property
-    @lru_cache
     def parameters_vector(self) -> tuple:
         k1 = self.smax * (self.r / 100)
         k2 = self.smax * np.abs(1. - self.r / 100)
         result = (k1, self.d01, self.c1, self.m1, k2, self.d02, self.c2, self.m2, 0)
         return result
-
-    def __hash__(self):
-        return pure_attr_hash(self)
 
 
 @dataclass
@@ -107,9 +97,5 @@ class SimulationSetup:
     saturation_cross_section_factor: float = 1.4
 
     @property
-    @lru_cache
     def stopping_power_source_code(self) -> int:
         return libam.stoppingPowerSource_no[self.stopping_power_source_name].value
-
-    def __hash__(self):
-        return pure_attr_hash(self)
